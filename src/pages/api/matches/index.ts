@@ -20,7 +20,7 @@ export default async function handler(
   await dbConnect();
   if (req.method === "GET") {
     // for retrieving matches list
-    const matches = await MatchModel.find({}).limit(10).lean();
+    const matches = await MatchModel.find({}).limit(100).lean();
     res.status(200).json(matches);
   } else if (req.method === "POST") {
     // creating a single match

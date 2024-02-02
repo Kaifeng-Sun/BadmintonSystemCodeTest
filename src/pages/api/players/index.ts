@@ -14,7 +14,7 @@ export default async function handler(
   await dbConnect();
   if (req.method === "GET") {
     // for retrieving players list
-    const players = await PlayerModel.find({}).limit(10).lean();
+    const players = await PlayerModel.find({}).limit(16).lean();
     res.status(200).json(players);
   } else if (req.method === "POST") {
     // creating a single todo

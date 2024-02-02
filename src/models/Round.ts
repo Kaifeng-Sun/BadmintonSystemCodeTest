@@ -11,11 +11,11 @@ import { Match } from "./Match";
 })
 
 export class Round {
-  @prop()
+  @prop({ unique: true})
   round_number: number;
 
-  @prop({ type: () => [Match], required: true })
-  public matches?: Ref<Match>[];
+  @prop()
+  matches: string[];
 
   @prop({ default: false })
   isCompleted: string;

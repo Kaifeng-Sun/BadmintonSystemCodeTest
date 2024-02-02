@@ -1,5 +1,5 @@
 // pages/api/matches/[id].ts
-import { MatchModel, PlayerModel } from "@/models";
+import { MatchModel, PlayerModel, RoundModel } from "@/models";
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "../../../../lib/dbConnect";
 import { Match } from "@/models/Match";
@@ -21,7 +21,7 @@ async function rankPlayers() {
   let currentRank = 1;
   let lastPrimaryPoints: any = null;
   let lastSecondaryPoints: any = null;
-  players.map(async(player, index) => {
+  players.map(async (player, index) => {
     //both points same rank don't move to next
     if (index > 0 &&
       (player.roundPrimaryPoints !== lastPrimaryPoints ||
@@ -30,7 +30,6 @@ async function rankPlayers() {
     }
     lastPrimaryPoints = player.roundPrimaryPoints;
     lastSecondaryPoints = player.roundSecondaryPoints;
-    console.log(currentRank);
     await PlayerModel.updateOne(
       { _id: player._id },
       {
@@ -62,45 +61,43 @@ export default async function handler(
     const body = req.body as UpdateMatchBody;
     const match = await MatchModel.findById(id);
     if (match) {
-        match.set({ ...body, isCompleted:true });
+      match.set({ ...body, isCompleted: true });
       await match.save();
 
       //calculate the primary point and secondary point after every matches updated 
-    const primaryPointsForPlayer1 = match.winner === match.player1 ? 1 : 0;
-    const primaryPointsForPlayer2 = match.winner === match.player2 ? 1 : 0;
+      const primaryPointsForPlayer1 = match.winner === match.player1 ? 1 : 0;
+      const primaryPointsForPlayer2 = match.winner === match.player2 ? 1 : 0;
 
-    let secondaryPointsForPlayer1 = 0;
-    let secondaryPointsForPlayer2 = 0;
+      let secondaryPointsForPlayer1 = 0;
+      let secondaryPointsForPlayer2 = 0;
 
-    match.games.forEach(game => {
-      secondaryPointsForPlayer1 += game.player1_score - game.player2_score;
-      secondaryPointsForPlayer2 += game.player2_score - game.player1_score;
-    });
+      match.games.forEach(game => {
+        secondaryPointsForPlayer1 += game.player1_score - game.player2_score;
+        secondaryPointsForPlayer2 += game.player2_score - game.player1_score;
+      });
 
-    await PlayerModel.updateOne(
-      { _id: match.player1 },
-      {
-        $inc: {
-          roundPrimaryPoints: primaryPointsForPlayer1,
-          roundSecondaryPoints: secondaryPointsForPlayer1
+      await PlayerModel.updateOne(
+        { _id: match.player1 },
+        {
+          $inc: {
+            roundPrimaryPoints: primaryPointsForPlayer1,
+            roundSecondaryPoints: secondaryPointsForPlayer1
+          }
         }
-      }
-    );
+      );
 
-    await PlayerModel.updateOne(
-      { _id: match.player2 },
-      {
-        $inc: {
-          roundPrimaryPoints: primaryPointsForPlayer2,
-          roundSecondaryPoints: secondaryPointsForPlayer2
+      await PlayerModel.updateOne(
+        { _id: match.player2 },
+        {
+          $inc: {
+            roundPrimaryPoints: primaryPointsForPlayer2,
+            roundSecondaryPoints: secondaryPointsForPlayer2
+          }
         }
-      }
-    );
+      );
 
-    //recalculate rank
-    rankPlayers();
-
-    //close round
+      //recalculate rank
+      rankPlayers();
 
       res.status(200).json(match.toJSON());
     } else {

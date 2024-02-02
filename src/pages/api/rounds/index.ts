@@ -37,7 +37,6 @@ async function pairPlayers(players: Player[]) {
 
   for (let player of players) {
     if (usedPlayers.has(player._id)) continue;
-    console.log(usedPlayers);
 
     const previousOpponents = player.previous_opponents;
     
@@ -69,13 +68,13 @@ export default async function handler(
     const rounds = await RoundModel.find({}).limit(10).lean();
     res.status(200).json(rounds);
   } else if (req.method === "POST") {
+    
     //TODO:if matches of last round are not all completed then cannot create a new round 
 
     //generate matches schedule and create those matches to the db for new round
     const players: Player[] = await fetchPlayers();
     const pairedPlayers = await pairPlayers(players);
-
-    pairedPlayers.forEach(async (pairedPlayer) => {
+    const createdMatchesPromises = pairedPlayers.map(async (pairedPlayer) => {
       const match = new MatchModel({
         player1: pairedPlayer.player1._id,
         player2: pairedPlayer.player2._id,
@@ -83,16 +82,17 @@ export default async function handler(
         winner: '',
       });
       await match.save();
-
       //add match id to the player
       await PlayerModel.updateOne({ _id: pairedPlayer.player1._id }, { $push: { matchIds: match._id, previous_opponents: pairedPlayer.player2._id } });
       await PlayerModel.updateOne({ _id: pairedPlayer.player2._id }, { $push: { matchIds: match._id, previous_opponents: pairedPlayer.player1._id } });
+      return match._id
     })
 
-    // creating a single round
+    const createdMatches = await Promise.all(createdMatchesPromises);
     const round = new RoundModel({
-      matches: pairedPlayers
+      matches: createdMatches
     });
+    
     await round.save();
 
     res.status(200).json(round.toJSON());

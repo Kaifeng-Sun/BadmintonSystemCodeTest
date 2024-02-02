@@ -24,7 +24,7 @@ export class Match {
   @prop({ type: () => [Game], required: true })
   games!: Game[];
 
-  @prop()
+  @prop({ default: "" })
   winner: string;
 
   @prop({ default: false })
