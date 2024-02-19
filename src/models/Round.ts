@@ -1,6 +1,5 @@
 import { pre, prop, Ref } from "@typegoose/typegoose";
 import { RoundModel } from ".";
-import { Match } from "./Match";
 
 @pre<Round>('save', async function () {
   // auto increment before save a new round

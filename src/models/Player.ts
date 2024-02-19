@@ -1,11 +1,19 @@
-import { prop, Ref } from "@typegoose/typegoose";
-import { nanoid } from "nanoid";
-import { Match } from "./Match";
+import { prop } from "@typegoose/typegoose";
+import type { Ref } from "@typegoose/typegoose";
+import { Match, Tournament } from "./Tournament";
+
+export class PlayerTournamentScore {
+  @prop({ ref: () => Tournament })
+  tournament?: Ref<Tournament>;
+
+  @prop({ default: 0 })
+  roundPrimaryPoints: number;
+
+  @prop({ default: 0 })
+  roundSecondaryPoints: number;
+}
 
 export class Player {
-  @prop({ default: () => nanoid(8) })
-  _id: string;
-
   @prop({ required: true })
   first_name: string;
 
@@ -13,24 +21,15 @@ export class Player {
   last_name: string;
 
   @prop()
-  dob: string;
+  gender?: string;
+
+  @prop({ type: () => [PlayerTournamentScore]})
+  scores?: PlayerTournamentScore[];
+  
+
+  @prop({ ref: () => Match })
+  matchIds?: Ref<Match>[];
 
   @prop()
-  gender: string;
-  
-  @prop({ default: 0 })
-  roundPrimaryPoints: number;
-  
-  @prop({ default: 0 })
-  roundSecondaryPoints: number;
-
-  @prop({ default: 1 })
-  rank: number;
-
-  @prop({ ref: () => Match, default: [] })
-  public matchIds?: Ref<Match>[];
-
-  @prop({ default: [] })
-  previous_opponents: string[];
-
+  previous_opponents?: string[];
 }
